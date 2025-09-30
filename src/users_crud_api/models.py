@@ -7,14 +7,12 @@ def init_users_db():
 
     cur.execute('''
     CREATE TABLE IF NOT EXISTS Users (
-    id INTEGER PRIMARY KEY,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE,
-    created_at TEXT NOT NULL
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        created_at TEXT NOT NULL
     )
     ''')
 
     users_db.commit()
-    users_db.close()
-
     return users_db
