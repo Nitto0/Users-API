@@ -2,6 +2,8 @@ import sqlite3
 from flask import Flask, jsonify, request, abort
 import models
 from datetime import datetime, UTC
+from schemas import UserSchema
+from pydantic import ValidationError
 
 app = Flask(__name__)
 
@@ -18,9 +20,10 @@ def read_users():
     return jsonify(users), 200
 
 
-@app.route("/api/users/<int:user_id>", methods=['GET'])
+@app.route("/api/users/<user_id>", methods=['GET'])
 def read_user(user_id):
-    # Валидация здесь
+    if not user_id.isdigit():
+        abort(400, description="User ID should be int")
 
     users_db = models.init_users_db()
     cur = users_db.cursor()
@@ -44,7 +47,14 @@ def create_user():
     if not new_user or 'name' not in new_user:
         abort(400, description="You should write a name")
 
-    # Валидация здесь
+    if 'email' not in new_user:
+        new_user['email'] = f"{new_user['name']}@email.com"
+
+    try:
+        validate_user = UserSchema(name=new_user['name'], email=new_user['email'])
+        print(f"Success validation! Name: {validate_user.name}, email: {validate_user.email}")
+    except ValidationError:
+        abort(400, description="Validation error!")
 
     created_at = datetime.now(UTC).isoformat()
     new_user['created_at'] = created_at
@@ -66,9 +76,10 @@ def create_user():
         abort(409, description="Email should be unique")
 
 
-@app.route("/api/users/<int:user_id>", methods=['DELETE'])
+@app.route("/api/users/<user_id>", methods=['DELETE'])
 def delete_user(user_id):
-    # Валидация здесь
+    if not user_id.isdigit():
+        abort(400, description="User ID should be int")
 
     users_db = models.init_users_db()
     cur = users_db.cursor()
@@ -84,9 +95,10 @@ def delete_user(user_id):
     return jsonify({'message': 'User deleted successfully'}), 200
 
 
-@app.route("/api/users/<int:user_id>", methods=['PATCH'])
+@app.route("/api/users/<user_id>", methods=['PATCH'])
 def update_user(user_id):
-    # Валидация здесь (user_id)
+    if not user_id.isdigit():
+        abort(400, description="User ID should be int")
 
     updated_data = request.json
     if not updated_data:
@@ -104,7 +116,11 @@ def update_user(user_id):
     new_name = updated_data.get('name', user[1])
     new_email = updated_data.get('email', user[2])
 
-    # Валидация name и email
+    try:
+        validate_user = UserSchema(name=new_name, email=new_email)
+        print(f"Success validation! Name: {validate_user.name}, name: {validate_user.email}")
+    except ValidationError:
+        abort(400, description="Validation error!")
 
     try:
         cur.execute("UPDATE Users SET name = ?, email = ? WHERE id = ?",

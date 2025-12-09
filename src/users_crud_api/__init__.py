@@ -1,1 +1,1 @@
-from . import main, models, routes
+from . import main, models, routes, schemas
