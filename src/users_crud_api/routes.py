@@ -27,7 +27,9 @@ def read_user(user_id):
 
     users_db = models.init_users_db()
     cur = users_db.cursor()
-    cur.execute("SELECT * FROM Users WHERE id = ?", (user_id, ))
+
+    sql = "SELECT * FROM Users WHERE id = ?"
+    cur.execute(sql, (user_id, ))
 
     user = cur.fetchone()
     if not user:
@@ -63,8 +65,8 @@ def create_user():
     cur = users_db.cursor()
 
     try:
-        cur.execute('INSERT INTO Users (name, email, created_at) VALUES (?, ?, ?)',
-                    (new_user['name'], new_user['email'], new_user['created_at']))
+        sql = "INSERT INTO Users (name, email, created_at) VALUES (?, ?, ?)"
+        cur.execute(sql, (new_user['name'], new_user['email'], new_user['created_at']))
         users_db.commit()
 
         return jsonify({
@@ -83,13 +85,16 @@ def delete_user(user_id):
 
     users_db = models.init_users_db()
     cur = users_db.cursor()
-    cur.execute("SELECT * FROM Users WHERE id = ?", (user_id, ))
+
+    sql = "SELECT * FROM Users WHERE id = ?"
+    cur.execute(sql, (user_id, ))
 
     user = cur.fetchone()
     if not user:
         abort(404, description="This user does not exists")
 
-    cur.execute("DELETE FROM Users WHERE id = ?", (user_id, ))
+    sql = "DELETE FROM Users WHERE id = ?"
+    cur.execute(sql, (user_id, ))
     users_db.commit()
 
     return jsonify({'message': 'User deleted successfully'}), 200
@@ -107,7 +112,8 @@ def update_user(user_id):
     users_db = models.init_users_db()
     cur = users_db.cursor()
 
-    cur.execute("SELECT * FROM Users WHERE id = ?", (user_id, ))
+    sql = "SELECT * FROM Users WHERE id = ?"
+    cur.execute(sql, (user_id, ))
     user = cur.fetchone()
 
     if not user:
@@ -123,11 +129,12 @@ def update_user(user_id):
         abort(400, description="Validation error!")
 
     try:
-        cur.execute("UPDATE Users SET name = ?, email = ? WHERE id = ?",
-                    (new_name, new_email, user_id))
+        sql = "UPDATE Users SET name = ?, email = ? WHERE id = ?"
+        cur.execute(sql, (new_name, new_email, user_id))
         users_db.commit()
 
-        cur.execute("SELECT * FROM Users WHERE id = ?", (user_id, ))
+        sql = "SELECT * FROM Users WHERE id = ?"
+        cur.execute(sql, (user_id, ))
         user = cur.fetchone()
 
         return jsonify({
